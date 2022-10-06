@@ -13,6 +13,14 @@ namespace SyncStream.Documentation.Configuration;
 public class DocumentationConfiguration
 {
     /// <summary>
+    ///     This property denotes whether to include the application's XML comments or not
+    /// </summary>
+    [ConfigurationKeyName("includeXmlComments")]
+    [JsonPropertyName("includeXmlComments")]
+    [XmlAttribute("includeXmlComments")]
+    public bool IncludeXmlComments { get; set; }
+
+    /// <summary>
     ///     This property contains the software license
     /// </summary>
     [ConfigurationKeyName("license")]

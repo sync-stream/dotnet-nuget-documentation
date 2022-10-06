@@ -47,9 +47,11 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             // Enable example filters
             options.ExampleFilters();
 
-            // We want to include the XML documentation
-            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory,
-                $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+            // We may want to include the XML documentation
+            if (configuration.IncludeXmlComments)
+                options.IncludeXmlComments(Path.Combine(
+                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
 
             // Add our markdown documentation document filter
             options.DocumentFilter<MarkdownDocumentationDocumentFilter>();
