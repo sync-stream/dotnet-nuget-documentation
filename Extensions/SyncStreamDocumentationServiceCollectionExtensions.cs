@@ -36,7 +36,7 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
         DocumentationConfiguration configuration)
     {
         // Add Swagger to the IServiceCollection instance
-        instance.AddSwaggerGen(options =>
+        instance.AddEndpointsApiExplorer().AddSwaggerGen(options =>
         {
             // Describe all parameters in camel case
             options.SwaggerGeneratorOptions.DescribeAllParametersInCamelCase = true;

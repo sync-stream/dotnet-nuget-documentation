@@ -45,24 +45,24 @@
         <TargetFramework>net6.0</TargetFramework>
 
         <!-- Define the package version -->
-        <Version>1.0.16</Version>
+        <Version>1.0.17</Version>
     </PropertyGroup>
 
     <!-- Define the package's NuGet dependencies -->
     <ItemGroup>
-        
+
         <!-- We'll need Swagger support -->
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-        
+
         <!-- We'll need Swagger Annotation support -->
         <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.4.0" />
-        
+
         <!-- We'll need Swagger Filter support -->
         <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="7.0.5" />
-        
+
         <!-- We'll need Swagger ReDoc support -->
         <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="6.4.0" />
-        
+
         <!-- We'll need Swagger Example support -->
         <PackageReference Include="Swashbuckle.Examples" Version="4.1.0" />
     </ItemGroup>
@@ -72,7 +72,7 @@
 
         <!-- We need to include our readme file -->
         <Content Include="readme.md" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-        
+
         <!-- We need to include our ReDoc index file -->
         <Content Include="Asset\ReDocIndex.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     </ItemGroup>
