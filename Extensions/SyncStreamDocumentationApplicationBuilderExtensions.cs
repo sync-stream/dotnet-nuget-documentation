@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using SyncStream.Documentation.Configuration;
 
@@ -28,8 +29,9 @@ public static class SyncStreamDocumentationApplicationBuilderExtensions
 
             // Define our ReDoc index
             options.IndexStream = () =>
-                new MemoryStream(File.ReadAllBytes(Path.Join(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Asset", "ReDocIndex.html")));
+                new MemoryStream(File.Exists(configuration.DocumentationIndex)
+                    ? File.ReadAllBytes(configuration.DocumentationIndex)
+                    : Encoding.UTF8.GetBytes(configuration.DocumentationIndex));
 
             // Sanitize user input
             options.EnableUntrustedSpec();

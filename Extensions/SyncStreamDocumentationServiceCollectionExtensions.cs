@@ -88,14 +88,22 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             // Define our open api information
             OpenApiInfo apiInfo = new();
 
-            // Set the description into the open api information object
-            apiInfo.Description = File.ReadAllText(Path.Combine(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "readme.md"))
-                .Replace("${SWAGGER_PATH}", configuration.GetFullPath(), StringComparison.CurrentCultureIgnoreCase)
-                .Replace("${SWAGGER_URL}", configuration.GetFullPath(), StringComparison.CurrentCultureIgnoreCase);
+            // Define our readme file path
+            string readmeFile =
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                    "readme.md");
+
+            // Check to see if a readme.md file exists then set the description into the open api information object
+            if (File.Exists(readmeFile))
+                apiInfo.Description = File
+                    .ReadAllText(Path.Combine(
+                        Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty, "readme.md"))
+                    .Replace("${SWAGGER_PATH}", configuration.GetFullPath(), StringComparison.CurrentCultureIgnoreCase)
+                    .Replace("${SWAGGER_URL}", configuration.GetFullUrl(), StringComparison.CurrentCultureIgnoreCase);
 
             // Set the license into the open api information object
-            apiInfo.License = new() { Url = configuration.License?.ToUrl() };
+            if (configuration.License is not null or DocumentationLicense.Proprietary)
+                apiInfo.License = new() { Url = configuration.License?.ToUrl() };
 
             // Set our extensions into the open api information object
             apiInfo.Extensions = extensions;
