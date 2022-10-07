@@ -4,10 +4,11 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using SyncStream.Documentation.Configuration;
 using SyncStream.Documentation.Filters.Document;
 using SyncStream.Documentation.Filters.Operation;
-using SyncStream.Documentation.Model;
+using SwaggerGenOptionsExtensions = Swashbuckle.AspNetCore.Filters.SwaggerGenOptionsExtensions;
 
 // Define our namespace
 namespace SyncStream.Documentation.Extensions;
@@ -18,6 +19,60 @@ namespace SyncStream.Documentation.Extensions;
 public static class SyncStreamDocumentationServiceCollectionExtensions
 {
     /// <summary>
+    ///     This property contains any custom IDocumentFilter filters for the documentation generation
+    /// </summary>
+    private static readonly List<Tuple<Type, object[]>> DocumentFilters = new();
+
+    /// <summary>
+    ///     This property contains any custom IOperationFilter filters for the documentation generation
+    /// </summary>
+    private static readonly List<Tuple<Type, object[]>> OperationFilters = new();
+
+    /// <summary>
+    ///     This property contains any custom IParameterFilter filters for the documentation generation
+    /// </summary>
+    private static readonly List<Tuple<Type, object[]>> ParameterFilters = new();
+
+    /// <summary>
+    ///     This property contains any custom IRequestBodyFilter filters for the documentation generation
+    /// </summary>
+    private static readonly List<Tuple<Type, object[]>> RequestBodyFilters = new();
+
+    /// <summary>
+    ///     This property contains any custom ISchemaFilter filters for the documentation generation
+    /// </summary>
+    private static readonly List<Tuple<Type, object[]>> SchemaFilters = new();
+
+    /// <summary>
+    ///     This method calls a generic filter method for adding a custom filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current instance of the SwaggerGenOptions</param>
+    /// <param name="method">The filter method to call</param>
+    /// <param name="type">The type of the filter to add</param>
+    /// <param name="arguments">The arguments to pass to the filter's constructor</param>
+    private static void
+        CallFilterMethod(this SwaggerGenOptions instance, string method, Type type, object[] arguments) =>
+        typeof(SwaggerGenOptionsExtensions).GetMethod(method, BindingFlags.Public | BindingFlags.Static)
+            ?.MakeGenericMethod(type).Invoke(instance, arguments);
+
+    /// <summary>
+    ///     This method adds a custom IDocumentFilter filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current IServiceCollection instance</param>
+    /// <param name="arguments">Arguments to send to the filter's constructor</param>
+    /// <typeparam name="TDocumentFilter">The type of the IDocumentFilter filter to add</typeparam>
+    /// <returns>The current IServiceCollection <paramref name="instance" /></returns>
+    public static IServiceCollection AddSyncStreamDocumentationDocumentFilter<TDocumentFilter>(
+        this IServiceCollection instance, params object[] arguments) where TDocumentFilter : IDocumentFilter
+    {
+        // Add the filter to the instance
+        DocumentFilters.Add(new(typeof(TDocumentFilter), arguments));
+
+        // We're done, return the current IServiceCollection instance
+        return instance;
+    }
+
+    /// <summary>
     ///     This method configures the <paramref name="instance" /> with a documentation example for <typeparamref name="TExample" />
     /// </summary>
     /// <param name="instance">The current IServiceCollection instance</param>
@@ -25,6 +80,74 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
     /// <returns><paramref name="instance" /></returns>
     public static IServiceCollection AddSyncStreamDocumentationExample<TExample>(this IServiceCollection instance)
         where TExample : IExamplesProvider<TExample> => instance.AddSwaggerExamplesFromAssemblyOf<TExample>();
+
+    /// <summary>
+    ///     This method adds a custom IOperationFilter filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current IServiceCollection instance</param>
+    /// <param name="arguments">Arguments to send to the filter's constructor</param>
+    /// <typeparam name="TOperationFilter">The type of the IOperationFilter filter to add</typeparam>
+    /// <returns>The current IServiceCollection <paramref name="instance" /></returns>
+    public static IServiceCollection AddSyncStreamDocumentationOperationFilter<TOperationFilter>(
+        this IServiceCollection instance, params object[] arguments) where TOperationFilter : IOperationFilter
+    {
+        // Add the filter to the instance
+        OperationFilters.Add(new(typeof(TOperationFilter), arguments));
+
+        // We're done, return the current IServiceCollection instance
+        return instance;
+    }
+
+    /// <summary>
+    ///     This method adds a custom IParameterFilter filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current IServiceCollection instance</param>
+    /// <param name="arguments">Arguments to send to the filter's constructor</param>
+    /// <typeparam name="TParameterFilter">The type of the IParameterFilter filter to add</typeparam>
+    /// <returns>The current IServiceCollection <paramref name="instance" /></returns>
+    public static IServiceCollection AddSyncStreamDocumentationParameterFilter<TParameterFilter>(
+        this IServiceCollection instance, params object[] arguments) where TParameterFilter : IParameterFilter
+    {
+        // Add the filter to the instance
+        ParameterFilters.Add(new(typeof(TParameterFilter), arguments));
+
+        // We're done, return the current IServiceCollection instance
+        return instance;
+    }
+
+    /// <summary>
+    ///     This method adds a custom IRequestBodyFilter filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current IServiceCollection instance</param>
+    /// <param name="arguments">Arguments to send to the filter's constructor</param>
+    /// <typeparam name="TRequestBodyFilter">The type of the IRequestBodyFilter filter to add</typeparam>
+    /// <returns>The current IServiceCollection <paramref name="instance" /></returns>
+    public static IServiceCollection AddSyncStreamDocumentationRequestBodyFilter<TRequestBodyFilter>(
+        this IServiceCollection instance, params object[] arguments) where TRequestBodyFilter : IRequestBodyFilter
+    {
+        // Add the filter to the instance
+        RequestBodyFilters.Add(new(typeof(TRequestBodyFilter), arguments));
+
+        // We're done, return the current IServiceCollection instance
+        return instance;
+    }
+
+    /// <summary>
+    ///     This method adds a custom ISchemaFilter filter to the documentation generation
+    /// </summary>
+    /// <param name="instance">The current IServiceCollection instance</param>
+    /// <param name="arguments">Arguments to send to the filter's constructor</param>
+    /// <typeparam name="TSchemaFilter">The type of the ISchemaFilter filter to add</typeparam>
+    /// <returns>The current IServiceCollection <paramref name="instance" /></returns>
+    public static IServiceCollection AddSyncStreamDocumentationSchemaFilter<TSchemaFilter>(
+        this IServiceCollection instance, params object[] arguments) where TSchemaFilter : ISchemaFilter
+    {
+        // Add the filter to the instance
+        SchemaFilters.Add(new(typeof(TSchemaFilter), arguments));
+
+        // We're done, return the current IServiceCollection instance
+        return instance;
+    }
 
     /// <summary>
     ///     This method configures the <paramref name="instance" /> with Swagger and ReDoc
@@ -67,6 +190,21 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
 
             // Add our explicit response definition operation filter
             options.OperationFilter<ReturnsOperationFilter>();
+
+            // Iterate over any custom document filters
+            DocumentFilters.ForEach(f => CallFilterMethod(options, "DocumentFilter", f.Item1, f.Item2));
+
+            // Iterate over any custom operation filters
+            OperationFilters.ForEach(f => CallFilterMethod(options, "OperationFilter", f.Item1, f.Item2));
+
+            // Iterate over any custom parameter filters
+            ParameterFilters.ForEach(f => CallFilterMethod(options, "ParameterFilter", f.Item1, f.Item2));
+
+            // Iterate over any custom request-body filters
+            RequestBodyFilters.ForEach(f => CallFilterMethod(options, "RequestBodyFilter", f.Item1, f.Item2));
+
+            // Iterate over any custom schema filters
+            SchemaFilters.ForEach(f => CallFilterMethod(options, "SchemaFilter", f.Item1, f.Item2));
 
             // Define our extensions
             Dictionary<string, IOpenApiExtension> extensions = new();
