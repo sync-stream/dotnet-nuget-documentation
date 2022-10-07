@@ -24,7 +24,7 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
     /// <typeparam name="TExample">The expected type of the example to use</typeparam>
     /// <returns><paramref name="instance" /></returns>
     public static IServiceCollection AddSyncStreamDocumentationExample<TExample>(this IServiceCollection instance)
-        where TExample : IExampleProvider<TExample> => instance.AddSwaggerExamplesFromAssemblyOf<TExample>();
+        where TExample : IExamplesProvider<TExample> => instance.AddSwaggerExamplesFromAssemblyOf<TExample>();
 
     /// <summary>
     ///     This method configures the <paramref name="instance" /> with Swagger and ReDoc
