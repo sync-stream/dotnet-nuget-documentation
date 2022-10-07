@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http.Features;
 using SyncStream.Documentation.Configuration;
 
 // Define our namespace
@@ -22,16 +24,13 @@ public static class SyncStreamDocumentationApplicationBuilderExtensions
         .UseReDoc(options =>
         {
             // Set the document title
-            options.DocumentTitle = $"{configuration.Title ?? Assembly.GetExecutingAssembly().GetName().Name}";
+            options.DocumentTitle = configuration.GetTitle();
 
             // Set the route prefix
-            options.RoutePrefix = "";
+            options.RoutePrefix = configuration.RoutePrefix;
 
             // Define our ReDoc index
-            options.IndexStream = () =>
-                new MemoryStream(File.Exists(configuration.DocumentationIndex)
-                    ? File.ReadAllBytes(configuration.DocumentationIndex)
-                    : Encoding.UTF8.GetBytes(configuration.DocumentationIndex));
+            options.IndexStream = configuration.GetReDocIndex;
 
             // Sanitize user input
             options.EnableUntrustedSpec();
@@ -54,7 +53,16 @@ public static class SyncStreamDocumentationApplicationBuilderExtensions
             // Sort properties alphabetically
             options.SortPropsAlphabetically();
 
+            // Localize our application's feature collection
+            FeatureCollection features = instance.Properties["server.features"] as FeatureCollection;
+
+            // Localize the addresses of the application
+            IServerAddressesFeature addresses = features?.Get<IServerAddressesFeature>();
+
+            // Localize the host URL
+            Uri hostUrl = addresses?.Addresses.Any() is true ? new(addresses.Addresses.First()) : null;
+
             // Define our specification URL
-            options.SpecUrl(configuration.GetFullPath());
+            options.SpecUrl(configuration.GetFullUrl(hostUrl));
         });
 }

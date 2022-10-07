@@ -1,8 +1,11 @@
+using SyncStream.Documentation.Extensions;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Microsoft.Extensions.Configuration;
+using Microsoft.OpenApi.Models;
 
 // Define our namespace
 namespace SyncStream.Documentation.Configuration;
@@ -63,7 +66,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("license")]
     [JsonPropertyName("license")]
     [XmlAttribute("license")]
-    public DocumentationLicense? License { get; set; }
+    public DocumentationLicense License { get; set; } = DocumentationLicense.Proprietary;
 
     /// <summary>
     ///     This property contains the URL or file path to the URL
@@ -82,6 +85,14 @@ public class DocumentationConfiguration
     public string Path { get; set; } = "/swagger";
 
     /// <summary>
+    ///     This property contains the route prefix for the ReDoc documentation route
+    /// </summary>
+    [ConfigurationKeyName("routePrefix")]
+    [JsonPropertyName("routePrefix")]
+    [XmlAttribute("routePrefix")]
+    public string RoutePrefix { get; set; } = string.Empty;
+
+    /// <summary>
     ///     This property contains the URL to the terms of service for the application
     /// </summary>
     [ConfigurationKeyName("termsOfService")]
@@ -95,7 +106,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("title")]
     [JsonPropertyName("title")]
     [XmlAttribute("title")]
-    public string Title { get; set; } = Assembly.GetExecutingAssembly().GetName().Name;
+    public string Title { get; set; }
 
     /// <summary>
     ///     This property contains the version of the API
@@ -103,7 +114,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("version")]
     [JsonPropertyName("version")]
     [XmlAttribute("version")]
-    public string Version { get; set; } = Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+    public string Version { get; set; }
 
     /// <summary>
     ///     This method returns the path to the Swagger UI
@@ -116,23 +127,60 @@ public class DocumentationConfiguration
     ///     This method returns the full path to the Swagger YAML file
     /// </summary>
     /// <returns>The full path to the Swagger YAML file</returns>
-    public string GetFullPath() =>
-        Regex.Replace("/" + string.Join("/", Path.StartsWith("/") ? Path[1..] : Path, Version, "swagger.yaml"), @"\/+",
-            "/", RegexOptions.Compiled);
+    public string GetFullPath() => Regex.Replace(string.Join("/", GetPath(), GetVersion(), "swagger.yaml"), @"\/+", "/",
+        RegexOptions.Compiled);
 
     /// <summary>
     ///     This method returns the full URL to the Swagger YAML file
     /// </summary>
+    /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger YAML file</returns>
-    public string GetFullUrl() =>
-        Regex.Replace(string.Join("/", HostUrl.EndsWith("/") ? HostUrl[..^1] : HostUrl, GetFullPath()), @"\/+", "/",
-            RegexOptions.Compiled);
+    public string GetFullUrl(Uri hostUrl = null) => Regex.Replace(
+        string.Join("/",
+            (hostUrl?.ToString() ?? HostUrl).EndsWith("/")
+                ? (hostUrl?.ToString() ?? HostUrl)[..^1]
+                : (hostUrl?.ToString() ?? HostUrl), GetFullPath()), @"\/+", "/", RegexOptions.Compiled);
+
+    /// <summary>
+    ///     This method returns the full license url of the application
+    /// </summary>
+    /// <returns>The full URL to the application's license</returns>
+    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License.ToUrl();
+
+    /// <summary>
+    ///     This method returns the full license url of the application as an OpenAPI schema
+    /// </summary>
+    /// <returns>The OpenAPI schema containing the full license url of the application</returns>
+    public OpenApiLicense GetLicenseUrlOpenApi() => new() { Url = GetLicenseUrl()};
+
+    /// <summary>
+    ///     This method returns the ReDoc UI index HTML for the application
+    /// </summary>
+    /// <returns>The ReDoc UI index HTML for the application</returns>
+    public MemoryStream GetReDocIndex() => new(File.Exists(DocumentationIndex)
+        ? File.ReadAllBytes(DocumentationIndex)
+        : Encoding.UTF8.GetBytes(DocumentationIndex));
+
+    /// <summary>
+    ///     This method returns a title for the application
+    /// </summary>
+    /// <returns>The application's title</returns>
+    public string GetTitle() => Title ?? Assembly.GetExecutingAssembly().GetName().Name;
 
     /// <summary>
     ///     This method returns the full URL to the Swagger UI
     /// </summary>
+    /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger UI</returns>
-    public string GetUrl() =>
-        Regex.Replace(string.Join("/", HostUrl.EndsWith("/") ? HostUrl[..^1] : HostUrl, GetPath()), @"\/+", "/",
-            RegexOptions.Compiled);
+    public string GetUrl(Uri hostUrl = null) => Regex.Replace(
+        string.Join("/",
+            (hostUrl?.ToString() ?? HostUrl).EndsWith("/")
+                ? (hostUrl?.ToString() ?? HostUrl)[..^1]
+                : (hostUrl?.ToString() ?? HostUrl), GetPath()), @"\/+", "/", RegexOptions.Compiled);
+
+    /// <summary>
+    ///     This method returns a version for the application
+    /// </summary>
+    /// <returns>The version of the application</returns>
+    public string GetVersion() => Version ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0.0";
 }

@@ -102,8 +102,7 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
                     .Replace("${SWAGGER_URL}", configuration.GetFullUrl(), StringComparison.CurrentCultureIgnoreCase);
 
             // Set the license into the open api information object
-            if (configuration.License is not null or DocumentationLicense.Proprietary)
-                apiInfo.License = new() { Url = configuration.License?.ToUrl() };
+            apiInfo.License = configuration.GetLicenseUrlOpenApi();
 
             // Set our extensions into the open api information object
             apiInfo.Extensions = extensions;
@@ -112,10 +111,13 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             apiInfo.TermsOfService = configuration.TermsOfService;
 
             // Set our application title into the open api information object
-            apiInfo.Title = configuration.Title;
+            apiInfo.Title = configuration.GetTitle();
 
             // Set our application version into the open api information object
-            apiInfo.Version = configuration.Version;
+            apiInfo.Version = configuration.GetVersion();
+
+            // Define our swagger specification document
+            options.SwaggerDoc(configuration.GetVersion(), apiInfo);
         }).AddSwaggerExamples();
 
         // We're done, return the current IServiceCollection instance
