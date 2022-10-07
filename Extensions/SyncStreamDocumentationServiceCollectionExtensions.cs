@@ -36,7 +36,7 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
         DocumentationConfiguration configuration)
     {
         // Add Swagger to the IServiceCollection instance
-        instance.AddEndpointsApiExplorer().AddSwaggerGen(options =>
+        instance.AddSwaggerGen(options =>
         {
             // Describe all parameters in camel case
             options.SwaggerGeneratorOptions.DescribeAllParametersInCamelCase = true;
@@ -63,8 +63,10 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             options.OperationFilter<DisplayNameOperationFilter>();
 
             // Add our markdown documentation operation filter
-
             options.OperationFilter<MarkdownDocumentationOperationFilter>();
+
+            // Add our explicit response definition operation filter
+            options.OperationFilter<ReturnsOperationFilter>();
 
             // Define our extensions
             Dictionary<string, IOpenApiExtension> extensions = new();
@@ -121,6 +123,6 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
         }).AddSwaggerExamples();
 
         // We're done, return the current IServiceCollection instance
-        return instance.AddHttpContextAccessor();
+        return instance;
     }
 }
