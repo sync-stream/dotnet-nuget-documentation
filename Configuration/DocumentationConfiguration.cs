@@ -17,12 +17,14 @@ namespace SyncStream.Documentation.Configuration;
 public class DocumentationConfiguration
 {
     /// <summary>
-    ///     This property contains the file path or HTML for the ReDoc index
+    ///     This property contains the path Swagger/ReDoc will be accessible at
     /// </summary>
-    [ConfigurationKeyName("documentationIndex")]
-    [JsonPropertyName("documentationIndex")]
-    [XmlText]
-    public string DocumentationIndex { get; set; } =
+    private string _path = "/swagger";
+
+    /// <summary>
+    ///     This property contains the default ReDoc index.html content
+    /// </summary>
+    private readonly string _reDocIndexHtml =
         "<!DOCTYPE html>" +
         "<html lang=\"en\">" +
         "<head>" +
@@ -43,6 +45,15 @@ public class DocumentationConfiguration
         "(function() { Redoc.init('%(SpecUrl)', { enumSkipQuotes: true, expandDefaultServerVariables: true, menuToggle: false, hideDownloadButton: true, untrustedSpec: false, requiredPropsFirst: true, showExtensions: false, sortPropsAlphabetically: true }, document.getElementById('documentation-container')); })();" +
         "</script>" +
         "</body></html>";
+
+    /// <summary>
+    ///     This property contains the file path or HTML for the ReDoc index
+    /// </summary>
+    [ConfigurationKeyName("documentationIndex")]
+    [JsonPropertyName("documentationIndex")]
+    [XmlText]
+    public string DocumentationIndex { get; set; }
+
 
     /// <summary>
     ///     This property contains the host url where Swagger and ReDoc will live
@@ -75,14 +86,6 @@ public class DocumentationConfiguration
     [JsonPropertyName("logo")]
     [XmlAttribute("logo")]
     public string Logo { get; set; }
-
-    /// <summary>
-    ///     This property contains the path Swagger/ReDoc will be accessible at
-    /// </summary>
-    [ConfigurationKeyName("path")]
-    [JsonPropertyName("path")]
-    [XmlText]
-    public string Path { get; set; } = "/swagger";
 
     /// <summary>
     ///     This property contains the route prefix for the ReDoc documentation route
@@ -121,7 +124,7 @@ public class DocumentationConfiguration
     /// </summary>
     /// <returns>The path to the Swagger UI</returns>
     public string GetPath() =>
-        Regex.Replace("/" + (Path.StartsWith("/") ? Path[1..] : Path), @"\/+", "/", RegexOptions.Compiled);
+        Regex.Replace("/" + (_path.StartsWith("/") ? _path[1..] : _path), @"\/+", "/", RegexOptions.Compiled);
 
     /// <summary>
     ///     This method returns the full path to the Swagger YAML file
@@ -157,9 +160,12 @@ public class DocumentationConfiguration
     ///     This method returns the ReDoc UI index HTML for the application
     /// </summary>
     /// <returns>The ReDoc UI index HTML for the application</returns>
-    public MemoryStream GetReDocIndex() => new(File.Exists(DocumentationIndex)
-        ? File.ReadAllBytes(DocumentationIndex)
-        : Encoding.UTF8.GetBytes(DocumentationIndex));
+    public MemoryStream GetReDocIndex() =>
+        !string.IsNullOrEmpty(DocumentationIndex) && !string.IsNullOrWhiteSpace(DocumentationIndex)
+            ? new(File.Exists(DocumentationIndex)
+                ? File.ReadAllBytes(DocumentationIndex)
+                : Encoding.UTF8.GetBytes(DocumentationIndex))
+            : new(Encoding.UTF8.GetBytes(_reDocIndexHtml));
 
     /// <summary>
     ///     This method returns a title for the application

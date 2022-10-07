@@ -53,14 +53,23 @@ public static class SyncStreamDocumentationApplicationBuilderExtensions
             // Sort properties alphabetically
             options.SortPropsAlphabetically();
 
-            // Localize our application's feature collection
-            FeatureCollection features = instance.Properties["server.features"] as FeatureCollection;
+            // Define our host url
+            Uri hostUrl = Uri.IsWellFormedUriString(configuration.HostUrl, UriKind.Absolute)
+                ? new(configuration.HostUrl)
+                : null;
 
-            // Localize the addresses of the application
-            IServerAddressesFeature addresses = features?.Get<IServerAddressesFeature>();
+            // Check for a host URL
+            if (hostUrl is null)
+            {
+                // Localize our application's feature collection
+                FeatureCollection features = instance.Properties["server.features"] as FeatureCollection;
 
-            // Localize the host URL
-            Uri hostUrl = addresses?.Addresses.Any() is true ? new(addresses.Addresses.First()) : null;
+                // Localize the addresses of the application
+                IServerAddressesFeature addresses = features?.Get<IServerAddressesFeature>();
+
+                // Localize the host URL
+                hostUrl = addresses?.Addresses.Any() is true ? new(addresses.Addresses.First()) : null;
+            }
 
             // Define our specification URL
             options.SpecUrl(configuration.GetFullUrl(hostUrl));
