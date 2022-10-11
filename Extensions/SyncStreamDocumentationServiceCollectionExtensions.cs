@@ -8,6 +8,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using SyncStream.Documentation.Configuration;
 using SyncStream.Documentation.Filters.Document;
 using SyncStream.Documentation.Filters.Operation;
+using SyncStream.Documentation.Filters.Schema;
 using SwaggerGenOptionsExtensions = Swashbuckle.AspNetCore.Filters.SwaggerGenOptionsExtensions;
 
 // Define our namespace
@@ -191,6 +192,18 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             // Add our explicit response definition operation filter
             options.OperationFilter<ReturnsOperationFilter>();
 
+            // Add our required-if schema filter
+            options.SchemaFilter<RequiredIfSchemaFilter>();
+
+            // Add our required-if-in schema filter
+            options.SchemaFilter<RequiredIfInSchemaFilter>();
+
+            // Add our required-if-NOT-NULL-or-empty schema filter
+            options.SchemaFilter<RequiredIfNotNullOrEmptySchemaFilter>();
+
+            // Add our required-if-NULL schema filter
+            options.SchemaFilter<RequiredIfNullOrEmptySchemaFilter>();
+
             // Iterate over any custom document filters
             DocumentFilters.ForEach(f => CallFilterMethod(options, "DocumentFilter", f.Item1, f.Item2));
 
@@ -213,13 +226,14 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             if (!string.IsNullOrEmpty(configuration.Logo) && !string.IsNullOrWhiteSpace(configuration.Logo))
             {
                 // Define our extension object
-                OpenApiObject logoExtension = new();
+                OpenApiObject logoExtension = new()
+                {
+                    // Add our logo URL to the configuration
+                    { "url", new OpenApiString(configuration.Logo) },
 
-                // Add our logo URL to the configuration
-                logoExtension.Add("url", new OpenApiString(configuration.Logo));
-
-                // Add our application title to the alternate text
-                logoExtension.Add("altText", new OpenApiString(configuration.Title));
+                    // Add our application title to the alternate text
+                    { "altText", new OpenApiString(configuration.Title) }
+                };
 
                 // Add the logo extension to the dictionary
                 extensions.Add("x-logo", logoExtension);
