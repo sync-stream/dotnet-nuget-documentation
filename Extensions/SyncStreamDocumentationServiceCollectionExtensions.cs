@@ -192,6 +192,9 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
             // Add our explicit response definition operation filter
             options.OperationFilter<ReturnsOperationFilter>();
 
+            // Add our documentation-ignore schema filter
+            options.SchemaFilter<DocumentationIgnoreSchemaFilter>();
+
             // Add our required-if schema filter
             options.SchemaFilter<RequiredIfSchemaFilter>();
 
