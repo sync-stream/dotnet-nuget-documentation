@@ -1,6 +1,4 @@
 using System.Reflection;
-using System.Text.Json.Serialization;
-using System.Xml.Serialization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using SyncStream.Documentation.Attribute;
@@ -19,27 +17,14 @@ public class DocumentationIgnoreSchemaFilter : ISchemaFilter
     /// <param name="schema"></param>
     /// <param name="context"></param>
     public void Apply(OpenApiSchema schema, SchemaFilterContext context) => context.Type?.GetProperties()
-        .Where(p => p.GetCustomAttribute<DocumentationIgnoreAttribute>(false) is not null).ToList().ForEach(p =>
-            new List<string>(new[]
-            {
-                // Localize the property's name
-                p.Name,
+        .Where(p => p.GetCustomAttribute<DocumentationIgnoreAttribute>(false) is not null)
+        .ToList().ForEach(p =>
+        {
+            // Localize the parameter
+            string parameter = schema.Properties.Where(i => i.Key.ToLower().Equals(p.Name.ToLower())).Select(i => i.Key)
+                .FirstOrDefault();
 
-                // Localize the Microsoft json property name
-                p.GetCustomAttribute<JsonPropertyNameAttribute>(false)?.Name,
-
-                // Localize the Newtonsoft json property name
-                p.GetCustomAttribute<Newtonsoft.Json.JsonPropertyAttribute>(false)?.PropertyName,
-
-                // Localize the Microsoft xml array element name
-                p.GetCustomAttribute<XmlArrayAttribute>(false)?.ElementName,
-
-                // Localize the Microsoft xml array item element name
-                p.GetCustomAttribute<XmlArrayItemAttribute>(false)?.ElementName,
-
-                // Localize the Microsoft xml element name
-                p.GetCustomAttribute<XmlElementAttribute>(false)?.ElementName
-            }.Where(n => n is not null)).ForEach(n =>
-                schema.Properties.Keys.Where(k => k.ToLower().Trim() == n.ToLower().Trim()).ToList()
-                    .ForEach(k => schema.Properties.Remove(k))));
+            // Make sure we have a parameter
+            if (!string.IsNullOrEmpty(parameter)) schema.Properties.Remove(parameter);
+        });
 }
