@@ -19,7 +19,7 @@ public class DocumentationIgnoreSchemaFilter : ISchemaFilter
     /// <param name="schema"></param>
     /// <param name="context"></param>
     public void Apply(OpenApiSchema schema, SchemaFilterContext context) => context.Type?.GetProperties()
-        .Where(p => p.GetCustomAttribute<DocumentationIgnoreAttribute>(false) is not null).Select(p =>
+        .Where(p => p.GetCustomAttribute<DocumentationIgnoreAttribute>(false) is not null).ToList().ForEach(p =>
             new List<string>(new[]
             {
                 // Localize the property's name
@@ -39,6 +39,7 @@ public class DocumentationIgnoreSchemaFilter : ISchemaFilter
 
                 // Localize the Microsoft xml element name
                 p.GetCustomAttribute<XmlElementAttribute>(false)?.ElementName
-            }.Where(n => n is not null))).Where(n => n.Any(p => schema.Properties.ContainsKey(p))).ToList()
-        .ForEach(n => n.ForEach(p => schema.Properties.Remove(p)));
+            }.Where(n => n is not null)).ForEach(n =>
+                schema.Properties.Keys.Where(k => k.ToLower().Trim() == n.ToLower().Trim()).ToList()
+                    .ForEach(k => schema.Properties.Remove(k))));
 }
