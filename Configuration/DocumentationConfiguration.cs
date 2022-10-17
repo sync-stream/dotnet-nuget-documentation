@@ -81,7 +81,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("license")]
     [JsonPropertyName("license")]
     [XmlAttribute("license")]
-    public DocumentationLicense? License { get; set; }
+    public DocumentationLicense License { get; set; } = DocumentationLicense.Proprietary;
 
     /// <summary>
     ///     This property contains the URL or file path to the URL
@@ -140,7 +140,7 @@ public class DocumentationConfiguration
     ///     This method returns the full license url of the application
     /// </summary>
     /// <returns>The full URL to the application's license</returns>
-    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License?.ToUrl();
+    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License.ToUrl();
 
     /// <summary>
     ///     This method returns the full license url of the application as an OpenAPI schema
@@ -188,16 +188,16 @@ public class DocumentationConfiguration
     public string GetUrl(string hostPart, string pathPart)
     {
         // Check the host part and sanitize it
-        if (hostPart.EndsWith("/") && !hostPart.EndsWith("://")) hostPart = hostPart[..^1];
+        if (hostPart?.EndsWith("/") is true && hostPart?.EndsWith("://") is not true) hostPart = hostPart[..^1];
 
         // Check the path part and sanitize it
-        if (pathPart.EndsWith("/")) pathPart = pathPart[..^1];
+        if (pathPart?.EndsWith("/") is true) pathPart = pathPart[..^1];
 
         // Check the path part again and sanitize it
-        if (pathPart.StartsWith("/")) pathPart = pathPart[1..];
+        if (pathPart?.StartsWith("/") is true) pathPart = pathPart[1..];
 
         // We're done, return the URL
-        return $"{hostPart.Trim()}/{pathPart.Trim()}";
+        return hostPart is not null ? $"{hostPart.Trim()}/{pathPart?.Trim()}" : null;
     }
 
     /// <summary>
