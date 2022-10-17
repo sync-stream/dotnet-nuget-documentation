@@ -138,11 +138,9 @@ public class DocumentationConfiguration
     /// </summary>
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger YAML file</returns>
-    public string GetFullUrl(Uri hostUrl = null) => Regex.Replace(
-        string.Join("/",
-            (hostUrl?.ToString() ?? HostUrl).EndsWith("/")
-                ? (hostUrl?.ToString() ?? HostUrl)[..^1]
-                : (hostUrl?.ToString() ?? HostUrl), GetFullPath()), @"\/+", "/", RegexOptions.Compiled);
+    public string GetFullUrl(Uri hostUrl = null) =>
+        Regex.Replace(string.Join("/", hostUrl?.ToString() ?? HostUrl, GetFullPath()), @"\/+", "/",
+            RegexOptions.Compiled);
 
     /// <summary>
     ///     This method returns the full license url of the application
@@ -154,7 +152,7 @@ public class DocumentationConfiguration
     ///     This method returns the full license url of the application as an OpenAPI schema
     /// </summary>
     /// <returns>The OpenAPI schema containing the full license url of the application</returns>
-    public OpenApiLicense GetLicenseUrlOpenApi() => new() { Url = GetLicenseUrl()};
+    public OpenApiLicense GetLicenseUrlOpenApi() => new() {Url = GetLicenseUrl()};
 
     /// <summary>
     ///     This method returns the ReDoc UI index HTML for the application
@@ -178,11 +176,8 @@ public class DocumentationConfiguration
     /// </summary>
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger UI</returns>
-    public string GetUrl(Uri hostUrl = null) => Regex.Replace(
-        string.Join("/",
-            (hostUrl?.ToString() ?? HostUrl).EndsWith("/")
-                ? (hostUrl?.ToString() ?? HostUrl)[..^1]
-                : (hostUrl?.ToString() ?? HostUrl), GetPath()), @"\/+", "/", RegexOptions.Compiled);
+    public string GetUrl(Uri hostUrl = null) =>
+        Regex.Replace(string.Join("/", hostUrl?.ToString() ?? HostUrl, GetPath()), @"\/+", "/", RegexOptions.Compiled);
 
     /// <summary>
     ///     This method returns a version for the application
