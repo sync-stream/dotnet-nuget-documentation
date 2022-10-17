@@ -32,10 +32,12 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
     /// </summary>
     /// <param name="instance">The current IServiceCollection instance</param>
     /// <param name="configuration">The documentation configuration values</param>
-    /// <param name="swaggerConfigurator">The action so the caller can also configure swagger</param>
+    /// <param name="xmlDocumentationFile">Optional, XML documentation file to include with Swagger/ReDoc</param>
+    /// <param name="swaggerConfigurator">Optional, action so the caller can also configure swagger</param>
     /// <returns><paramref name="instance" /></returns>
     public static IServiceCollection UseSyncStreamDocumentation(this IServiceCollection instance,
-        DocumentationConfiguration configuration, Action<SwaggerGenOptions> swaggerConfigurator = null)
+        DocumentationConfiguration configuration, string xmlDocumentationFile = null,
+        Action<SwaggerGenOptions> swaggerConfigurator = null)
     {
         // Add Swagger to the IServiceCollection instance
         instance.AddSwaggerGen(options =>
@@ -53,10 +55,8 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
                 options.ExampleFilters();
 
                 // We may want to include the XML documentation
-                if (configuration.IncludeXmlComments)
-                    options.IncludeXmlComments(Path.Combine(
-                        Path.GetPathRoot(Assembly.GetCallingAssembly().Location) ??
-                        Path.DirectorySeparatorChar.ToString(), $"{Assembly.GetCallingAssembly().GetName().Name}.xml"));
+                if (configuration.IncludeXmlComments && xmlDocumentationFile is not null)
+                    options.IncludeXmlComments(xmlDocumentationFile);
 
                 // Add our markdown documentation document filter
                 options.DocumentFilter<MarkdownDocumentationDocumentFilter>();
