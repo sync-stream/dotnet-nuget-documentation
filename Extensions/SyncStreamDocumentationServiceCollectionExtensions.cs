@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
@@ -33,10 +32,11 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
     /// <param name="instance">The current IServiceCollection instance</param>
     /// <param name="configuration">The documentation configuration values</param>
     /// <param name="xmlDocumentationFile">Optional, XML documentation file to include with Swagger/ReDoc</param>
+    /// <param name="markdownDescription">Optional, filepath or raw markdown to be used for the main description</param>
     /// <param name="swaggerConfigurator">Optional, action so the caller can also configure swagger</param>
     /// <returns><paramref name="instance" /></returns>
     public static IServiceCollection UseSyncStreamDocumentation(this IServiceCollection instance,
-        DocumentationConfiguration configuration, string xmlDocumentationFile = null,
+        DocumentationConfiguration configuration, string xmlDocumentationFile = null, string markdownDescription = null,
         Action<SwaggerGenOptions> swaggerConfigurator = null)
     {
         // Add Swagger to the IServiceCollection instance
@@ -111,21 +111,13 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
                 // Define our open api information
                 OpenApiInfo apiInfo = new();
 
-                // Define our readme file path
-                string readmeFile =
-                    Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                        "readme.md");
+                // Check to see if the markdown description is a file
+                if (File.Exists(markdownDescription)) markdownDescription = File.ReadAllText(markdownDescription);
 
-                // Check to see if a readme.md file exists then set the description into the open api information object
-                if (File.Exists(readmeFile))
-                    apiInfo.Description = File
-                        .ReadAllText(Path.Combine(
-                            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                            "readme.md"))
-                        .Replace("${SWAGGER_PATH}", configuration.GetFullPath(),
-                            StringComparison.CurrentCultureIgnoreCase)
-                        .Replace("${SWAGGER_URL}", configuration.GetFullUrl(),
-                            StringComparison.CurrentCultureIgnoreCase);
+                // Set the description into the API
+                apiInfo.Description = markdownDescription?
+                    .Replace("${SWAGGER_PATH}", configuration.GetFullPath(), StringComparison.CurrentCultureIgnoreCase)
+                    .Replace("${SWAGGER_URL}", configuration.GetFullUrl(), StringComparison.CurrentCultureIgnoreCase);
 
                 // Set the license into the open api information object
                 apiInfo.License = configuration.GetLicenseUrlOpenApi();
