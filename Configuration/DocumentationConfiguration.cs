@@ -130,7 +130,7 @@ public class DocumentationConfiguration
     ///     This method returns the full path to the Swagger YAML file
     /// </summary>
     /// <returns>The full path to the Swagger YAML file</returns>
-    public string GetFullPath() => Regex.Replace(string.Join("/", GetPath(), GetVersion(), "swagger.yaml"), @"\/+", "/",
+    public string GetFullPath() => Regex.Replace(string.Join("/", GetPath(), GetVersion(), "swagger.json"), @"\/+", "/",
         RegexOptions.Compiled);
 
     /// <summary>
