@@ -17,9 +17,14 @@ namespace SyncStream.Documentation.Configuration;
 public class DocumentationConfiguration
 {
     /// <summary>
+    ///     This property contains the default host and protocol
+    /// </summary>
+    private readonly string _host = "http://localhost/";
+
+    /// <summary>
     ///     This property contains the path Swagger/ReDoc will be accessible at
     /// </summary>
-    private string _path = "/swagger";
+    private readonly string _path = "/swagger";
 
     /// <summary>
     ///     This property contains the default ReDoc index.html content
@@ -54,14 +59,13 @@ public class DocumentationConfiguration
     [XmlText]
     public string DocumentationIndex { get; set; }
 
-
     /// <summary>
     ///     This property contains the host url where Swagger and ReDoc will live
     /// </summary>
     [ConfigurationKeyName("hostUrl")]
     [JsonPropertyName("hostUrl")]
     [XmlAttribute("hostUrl")]
-    public string HostUrl { get; set; } = "http://localhost";
+    public string HostUrl { get; set; }
 
     /// <summary>
     ///     This property denotes whether to include the application's XML comments or not
@@ -77,7 +81,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("license")]
     [JsonPropertyName("license")]
     [XmlAttribute("license")]
-    public DocumentationLicense License { get; set; } = DocumentationLicense.Proprietary;
+    public DocumentationLicense? License { get; set; }
 
     /// <summary>
     ///     This property contains the URL or file path to the URL
@@ -120,39 +124,43 @@ public class DocumentationConfiguration
     public string Version { get; set; }
 
     /// <summary>
-    ///     This method returns the path to the Swagger UI
-    /// </summary>
-    /// <returns>The path to the Swagger UI</returns>
-    public string GetPath() =>
-        Regex.Replace("/" + (_path.StartsWith("/") ? _path[1..] : _path), @"\/+", "/", RegexOptions.Compiled);
-
-    /// <summary>
     ///     This method returns the full path to the Swagger YAML file
     /// </summary>
     /// <returns>The full path to the Swagger YAML file</returns>
-    public string GetFullPath() => Regex.Replace(string.Join("/", GetPath(), GetVersion(), "swagger.json"), @"\/+", "/",
-        RegexOptions.Compiled);
+    public string GetFullPath() => GetPath($"/{GetPath()}/{GetVersion()}/swagger.json");
 
     /// <summary>
     ///     This method returns the full URL to the Swagger YAML file
     /// </summary>
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger YAML file</returns>
-    public string GetFullUrl(Uri hostUrl = null) =>
-        Regex.Replace(string.Join("/", hostUrl?.ToString() ?? HostUrl, GetFullPath()), @"\/+", "/",
-            RegexOptions.Compiled);
+    public string GetFullUrl(Uri hostUrl = null) => GetUrl(hostUrl?.ToString() ?? HostUrl ?? _host, GetFullPath());
 
     /// <summary>
     ///     This method returns the full license url of the application
     /// </summary>
     /// <returns>The full URL to the application's license</returns>
-    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License.ToUrl();
+    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License?.ToUrl();
 
     /// <summary>
     ///     This method returns the full license url of the application as an OpenAPI schema
     /// </summary>
     /// <returns>The OpenAPI schema containing the full license url of the application</returns>
     public OpenApiLicense GetLicenseUrlOpenApi() => new() {Url = GetLicenseUrl()};
+
+    /// <summary>
+    ///     This method sanitizes a <paramref name="path" /> for URL generation
+    /// </summary>
+    /// <param name="path">The path to sanitize</param>
+    /// <returns>The sanitized <paramref name="path" /></returns>
+    public string GetPath(string path) =>
+        $"/{Regex.Replace((path.StartsWith("/") ? path[1..] : path).Trim(), @"\/+", "/", RegexOptions.Compiled)}";
+
+    /// <summary>
+    ///     This method returns the path to the Swagger UI
+    /// </summary>
+    /// <returns>The path to the Swagger UI</returns>
+    public string GetPath() => GetPath(_path);
 
     /// <summary>
     ///     This method returns the ReDoc UI index HTML for the application
@@ -172,12 +180,33 @@ public class DocumentationConfiguration
     public string GetTitle() => Title ?? Assembly.GetExecutingAssembly().GetName().Name;
 
     /// <summary>
+    ///     This method sanitizes the <paramref name="hostPart" /> and <paramref name="pathPart" /> then generates an absolute URL
+    /// </summary>
+    /// <param name="hostPart">The host and protocol to sanitize</param>
+    /// <param name="pathPart">The path and query string to sanitize</param>
+    /// <returns>The sanitized absolute URL: <code><paramref name="hostPart" />/<paramref name="pathPart" /></code></returns>
+    public string GetUrl(string hostPart, string pathPart)
+    {
+        // Check the host part and sanitize it
+        if (hostPart.EndsWith("/") && !hostPart.EndsWith("://")) hostPart = hostPart[..^1];
+
+        // Check the path part and sanitize it
+        if (pathPart.EndsWith("/")) pathPart = pathPart[..^1];
+
+        // Check the path part again and sanitize it
+        if (pathPart.StartsWith("/")) pathPart = pathPart[1..];
+
+        // We're done, return the URL
+        return $"{hostPart.Trim()}/{pathPart.Trim()}";
+    }
+
+    /// <summary>
     ///     This method returns the full URL to the Swagger UI
     /// </summary>
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger UI</returns>
     public string GetUrl(Uri hostUrl = null) =>
-        Regex.Replace(string.Join("/", hostUrl?.ToString() ?? HostUrl, GetPath()), @"\/+", "/", RegexOptions.Compiled);
+        GetUrl(hostUrl?.ToString().Trim() ?? HostUrl?.Trim() ?? _host, GetPath());
 
     /// <summary>
     ///     This method returns a version for the application
