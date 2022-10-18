@@ -70,9 +70,6 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
                 // Add our markdown documentation operation filter
                 options.OperationFilter<MarkdownDocumentationOperationFilter>();
 
-                // Add our explicit response definition operation filter
-                options.OperationFilter<ReturnsOperationFilter>();
-
                 // Add our documentation-ignore schema filter
                 options.SchemaFilter<DocumentationIgnoreSchemaFilter>();
 
@@ -126,7 +123,8 @@ public static class SyncStreamDocumentationServiceCollectionExtensions
                 apiInfo.Extensions = extensions;
 
                 // Set our application terms-of-service into the open api information object
-                apiInfo.TermsOfService = configuration.TermsOfService;
+                apiInfo.TermsOfService =
+                    configuration.TermsOfService is not null ? new(configuration.TermsOfService) : null;
 
                 // Set our application title into the open api information object
                 apiInfo.Title = configuration.GetTitle();

@@ -1,8 +1,4 @@
-using System.Reflection;
-using System.Text;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http.Features;
 using SyncStream.Documentation.Configuration;
 
 // Define our namespace
@@ -20,40 +16,40 @@ public static class SyncStreamDocumentationApplicationBuilderExtensions
     /// <param name="configuration">The configuration values for the documentation</param>
     /// <returns><paramref name="instance" /></returns>
     public static IApplicationBuilder UseSyncStreamDocumentation(this IApplicationBuilder instance,
-        DocumentationConfiguration configuration) => instance.UseSwagger(options => options.SerializeAsV2 = false)
-        .UseReDoc(options =>
+        DocumentationConfiguration configuration) => instance
+        .UseSwagger(swaggerOptions => swaggerOptions.SerializeAsV2 = false).UseReDoc(redocOptions =>
         {
             // Set the document title
-            options.DocumentTitle = configuration.GetTitle();
+            redocOptions.DocumentTitle = configuration.GetTitle();
 
             // Set the route prefix
-            options.RoutePrefix = configuration.RoutePrefix;
+            redocOptions.RoutePrefix = configuration.RoutePrefix;
 
             // Define our ReDoc index
-            options.IndexStream = configuration.GetReDocIndex;
+            redocOptions.IndexStream = configuration.GetReDocIndex;
 
             // Sanitize user input
-            options.EnableUntrustedSpec();
+            redocOptions.EnableUntrustedSpec();
 
             // Expand successful responses
-            options.ExpandResponses("200,201");
+            redocOptions.ExpandResponses("200,201");
 
             // Do NOT inject authentication setting automatically
-            options.NoAutoAuth();
+            redocOptions.NoAutoAuth();
 
             // Show the path and verb in the middle panel
-            options.PathInMiddlePanel();
+            redocOptions.PathInMiddlePanel();
 
             // List required properties first
-            options.RequiredPropsFirst();
+            redocOptions.RequiredPropsFirst();
 
             // Set the vertical scroll offset
-            options.ScrollYOffset(10);
+            redocOptions.ScrollYOffset(10);
 
             // Sort properties alphabetically
-            options.SortPropsAlphabetically();
+            redocOptions.SortPropsAlphabetically();
 
             // Define our specification URL
-            options.SpecUrl(configuration.GetFullPath());
+            redocOptions.SpecUrl(configuration.GetFullPath());
         });
 }

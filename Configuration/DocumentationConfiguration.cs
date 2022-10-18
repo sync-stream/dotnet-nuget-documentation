@@ -1,4 +1,3 @@
-using SyncStream.Documentation.Extensions;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -6,6 +5,8 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using SyncStream.Documentation.Enum;
+using SyncStream.Documentation.Extensions;
 
 // Define our namespace
 namespace SyncStream.Documentation.Configuration;
@@ -19,17 +20,17 @@ public class DocumentationConfiguration
     /// <summary>
     ///     This property contains the default host and protocol
     /// </summary>
-    private readonly string _host = "http://localhost/";
+    private static readonly string Host = "http://localhost/";
 
     /// <summary>
     ///     This property contains the path Swagger/ReDoc will be accessible at
     /// </summary>
-    private readonly string _path = "/swagger";
+    private static readonly string Path = "/swagger";
 
     /// <summary>
     ///     This property contains the default ReDoc index.html content
     /// </summary>
-    private readonly string _reDocIndexHtml =
+    private static readonly string ReDocIndexHtml =
         "<!DOCTYPE html>" +
         "<html lang=\"en\">" +
         "<head>" +
@@ -65,7 +66,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("hostUrl")]
     [JsonPropertyName("hostUrl")]
     [XmlAttribute("hostUrl")]
-    public string HostUrl { get; set; }
+    public string HostUrl { get; set; } = Host;
 
     /// <summary>
     ///     This property denotes whether to include the application's XML comments or not
@@ -81,7 +82,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("license")]
     [JsonPropertyName("license")]
     [XmlAttribute("license")]
-    public DocumentationLicense License { get; set; } = DocumentationLicense.Proprietary;
+    public DocumentationLicenseEnum License { get; set; } = DocumentationLicenseEnum.Proprietary;
 
     /// <summary>
     ///     This property contains the URL or file path to the URL
@@ -105,7 +106,7 @@ public class DocumentationConfiguration
     [ConfigurationKeyName("termsOfService")]
     [JsonPropertyName("termsOfService")]
     [XmlAttribute("termsOfService")]
-    public Uri TermsOfService { get; set; }
+    public string TermsOfService { get; set; }
 
     /// <summary>
     ///     This property contains the application title to be displayed for the documentation
@@ -127,20 +128,21 @@ public class DocumentationConfiguration
     ///     This method returns the full path to the Swagger YAML file
     /// </summary>
     /// <returns>The full path to the Swagger YAML file</returns>
-    public string GetFullPath() => GetPath($"/{GetPath()}/{GetVersion()}/swagger.json");
+    public string GetFullPath() => Regex.Replace(GetPath($"/{GetPath()}/{GetVersion()}/swagger.json"), @"\/+", "/",
+        RegexOptions.Compiled);
 
     /// <summary>
     ///     This method returns the full URL to the Swagger YAML file
     /// </summary>
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger YAML file</returns>
-    public string GetFullUrl(Uri hostUrl = null) => GetUrl(hostUrl?.ToString() ?? HostUrl ?? _host, GetFullPath());
+    public string GetFullUrl(Uri hostUrl = null) => GetUrl(hostUrl?.ToString() ?? HostUrl ?? Host, GetFullPath());
 
     /// <summary>
     ///     This method returns the full license url of the application
     /// </summary>
     /// <returns>The full URL to the application's license</returns>
-    public Uri GetLicenseUrl() => License is DocumentationLicense.Proprietary ? null : License.ToUrl();
+    public Uri GetLicenseUrl() => License is DocumentationLicenseEnum.Proprietary ? null : License.ToUrl();
 
     /// <summary>
     ///     This method returns the full license url of the application as an OpenAPI schema
@@ -160,7 +162,7 @@ public class DocumentationConfiguration
     ///     This method returns the path to the Swagger UI
     /// </summary>
     /// <returns>The path to the Swagger UI</returns>
-    public string GetPath() => GetPath(_path);
+    public string GetPath() => GetPath(Path);
 
     /// <summary>
     ///     This method returns the ReDoc UI index HTML for the application
@@ -171,7 +173,7 @@ public class DocumentationConfiguration
             ? new(File.Exists(DocumentationIndex)
                 ? File.ReadAllBytes(DocumentationIndex)
                 : Encoding.UTF8.GetBytes(DocumentationIndex))
-            : new(Encoding.UTF8.GetBytes(_reDocIndexHtml));
+            : new(Encoding.UTF8.GetBytes(ReDocIndexHtml));
 
     /// <summary>
     ///     This method returns a title for the application
@@ -188,7 +190,7 @@ public class DocumentationConfiguration
     public string GetUrl(string hostPart, string pathPart)
     {
         // Check the host part and sanitize it
-        if (hostPart?.EndsWith("/") is true && hostPart?.EndsWith("://") is not true) hostPart = hostPart[..^1];
+        if (hostPart?.EndsWith("/") is true && hostPart.EndsWith("://") is not true) hostPart = hostPart[..^1];
 
         // Check the path part and sanitize it
         if (pathPart?.EndsWith("/") is true) pathPart = pathPart[..^1];
@@ -197,7 +199,9 @@ public class DocumentationConfiguration
         if (pathPart?.StartsWith("/") is true) pathPart = pathPart[1..];
 
         // We're done, return the URL
-        return hostPart is not null ? $"{hostPart.Trim()}/{pathPart?.Trim()}" : null;
+        return hostPart is not null
+            ? Regex.Replace($"{hostPart.Trim()}/{pathPart?.Trim()}", @"\/+", "/", RegexOptions.Compiled)
+            : null;
     }
 
     /// <summary>
@@ -206,7 +210,7 @@ public class DocumentationConfiguration
     /// <param name="hostUrl">Optional, host URL override</param>
     /// <returns>The full URL to the Swagger UI</returns>
     public string GetUrl(Uri hostUrl = null) =>
-        GetUrl(hostUrl?.ToString().Trim() ?? HostUrl?.Trim() ?? _host, GetPath());
+        GetUrl(hostUrl?.ToString().Trim() ?? HostUrl?.Trim() ?? Host, GetPath());
 
     /// <summary>
     ///     This method returns a version for the application
