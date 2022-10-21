@@ -190,7 +190,7 @@ public class DocumentationConfiguration
     public string GetUrl(string hostPart, string pathPart)
     {
         // Check the host part and sanitize it
-        if (hostPart?.EndsWith("/") is true && hostPart.EndsWith("://") is not true) hostPart = hostPart[..^1];
+        if (hostPart?.EndsWith("/") is true && hostPart.Contains("://") is not true) hostPart = hostPart[..^1];
 
         // Check the path part and sanitize it
         if (pathPart?.EndsWith("/") is true) pathPart = pathPart[..^1];
@@ -198,9 +198,12 @@ public class DocumentationConfiguration
         // Check the path part again and sanitize it
         if (pathPart?.StartsWith("/") is true) pathPart = pathPart[1..];
 
+        // Clean the path part
+        if (pathPart is not null) pathPart = Regex.Replace(pathPart.Trim(), @"\/+", "/", RegexOptions.Compiled);
+
         // We're done, return the URL
         return hostPart is not null
-            ? Regex.Replace($"{hostPart.Trim()}/{pathPart?.Trim()}", @"\/+", "/", RegexOptions.Compiled)
+            ? $"{hostPart.Trim()}/{pathPart?.Trim()}"
             : null;
     }
 
