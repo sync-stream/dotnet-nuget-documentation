@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -86,11 +87,11 @@ public class ReturnsOperationFilter : FilterWithExampleGenerator, IOperationFilt
         // Check for content types
         if (!contentTypes.Any())
         {
-            // Add our XML content type
-            contentTypes.Add("application/xml");
-
             // Add our JSON content type
-            contentTypes.Add("application/json");
+            contentTypes.Add(MediaTypeNames.Application.Json);
+
+            // Add our XML content type
+            contentTypes.Add(MediaTypeNames.Application.Xml);
         }
     }
 }
